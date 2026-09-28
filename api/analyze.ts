@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
 
-const MODELS_TO_TRY = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+const MODELS_TO_TRY = ['gemini-3.6-flash', 'gemini-2.5-flash'];
 
 async function generateWithFallback(ai: GoogleGenAI, prompt: string): Promise<string> {
   let lastError: any = null;
