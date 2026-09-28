@@ -188,31 +188,46 @@ async function startServer() {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const sampleExtractions: { sampleNumber: number; extractedText: string }[] = [];
 
+const MODELS_TO_TRY = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+
+async function generateWithFallback(ai: GoogleGenAI, prompt: string): Promise<string> {
+  let lastError: any = null;
+  for (const modelName of MODELS_TO_TRY) {
+    try {
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: prompt,
+      });
+      if (response && response.text) {
+        return response.text;
+      }
+    } catch (err: any) {
+      console.warn(`Model ${modelName} failed, trying fallback:`, err.message || err);
+      lastError = err;
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+  throw lastError || new Error('All model attempts failed');
+}
+
       // Phase 1: Extract 300-word passages for each provided writing sample
       for (let i = 0; i < rawSamples.length; i++) {
         const sampleNum = i + 1;
         const extractionPrompt = createExtractionPrompt(sampleNum, rawSamples[i]);
-        
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.6-flash',
-          contents: extractionPrompt,
-        });
+        const extractedText = await generateWithFallback(ai, extractionPrompt);
 
         sampleExtractions.push({
           sampleNumber: sampleNum,
-          extractedText: response.text || ''
+          extractedText
         });
       }
 
       // Phase 2: Master Synthesis using all extracted sample passages
       const synthesisPrompt = createSynthesisPrompt(sampleExtractions);
-      const synthesisResponse = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: synthesisPrompt,
-      });
+      const resultText = await generateWithFallback(ai, synthesisPrompt);
 
       res.json({
-        result: synthesisResponse.text,
+        result: resultText,
         sampleExtractions
       });
     } catch (error: any) {

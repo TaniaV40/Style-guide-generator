@@ -1,6 +1,28 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
 
+const MODELS_TO_TRY = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+
+async function generateWithFallback(ai: GoogleGenAI, prompt: string): Promise<string> {
+  let lastError: any = null;
+  for (const modelName of MODELS_TO_TRY) {
+    try {
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: prompt,
+      });
+      if (response && response.text) {
+        return response.text;
+      }
+    } catch (err: any) {
+      console.warn(`Model ${modelName} failed, trying fallback:`, err.message || err);
+      lastError = err;
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+  throw lastError || new Error('All model attempts failed');
+}
+
 function createExtractionPrompt(sampleNumber: number, sampleText: string): string {
   return `Your task is to look at the writing sample below and select passages for it to use later.
 
@@ -178,26 +200,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     for (let i = 0; i < rawSamples.length; i++) {
       const sampleNum = i + 1;
       const extractionPrompt = createExtractionPrompt(sampleNum, rawSamples[i]);
-      
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: extractionPrompt,
-      });
+      const extractedText = await generateWithFallback(ai, extractionPrompt);
 
       sampleExtractions.push({
         sampleNumber: sampleNum,
-        extractedText: response.text || ''
+        extractedText
       });
     }
 
     const synthesisPrompt = createSynthesisPrompt(sampleExtractions);
-    const synthesisResponse = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
-      contents: synthesisPrompt,
-    });
+    const resultText = await generateWithFallback(ai, synthesisPrompt);
 
     return res.status(200).json({
-      result: synthesisResponse.text,
+      result: resultText,
       sampleExtractions
     });
   } catch (error: any) {
