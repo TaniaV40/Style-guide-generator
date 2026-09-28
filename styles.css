@@ -1,0 +1,555 @@
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:ital,wght@0,300..800;1,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+:root {
+  --tma-navy: #1c3447;          /* Primary Header, Navy Card & Dark Backgrounds */
+  --tma-navy-dark: #132432;     /* Textarea & Inner Input Backgrounds */
+  --tma-gold: #C9A66B;          /* Primary Gold Accent, Badges, Stitched Borders & Highlights */
+  --tma-gold-light: #E6D2B0;    /* Hover State Gold */
+  --tma-paper: #F7F2EA;         /* Page Canvas Cream Background */
+  --tma-cream: #FAF6F0;         /* Card Inner Cream Background */
+  --tma-ink: #1c3447;           /* Main Text Color */
+  --tma-line: #E2D7C7;          /* Divider Lines & Borders */
+  --tma-rose-dark: #A83232;     /* Structural Risk & Alert Red */
+  --tma-emerald-dark: #2A7B4C;  /* Success & Verified Green */
+
+  --font-display: 'Playfair Display', serif;
+  --font-sans: 'Montserrat', sans-serif;
+  --font-script: 'Great Vibes', cursive;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  background-color: var(--tma-paper);
+  color: var(--tma-ink);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--tma-navy);
+  letter-spacing: 0.2px;
+}
+
+h1 {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+@media (min-width: 1024px) {
+  h1 {
+    font-size: 48px;
+  }
+}
+
+h2 {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+  h2 {
+    font-size: 32px;
+  }
+}
+
+a {
+  color: var(--tma-gold);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--tma-navy);
+}
+
+/* ==========================================================================
+   1. NAVIGATION BAR / HEADER (.topbar - 88px Standard)
+   ========================================================================== */
+.topbar {
+  height: 88px;
+  background: var(--tma-navy);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4vw;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 4px 20px rgba(19, 36, 50, 0.35);
+  border-bottom: 1px solid rgba(201, 166, 107, 0.25);
+}
+
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.brand-icon-sq {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(201, 166, 107, 0.4);
+  transition: transform 0.2s ease;
+}
+
+.brand-icon-sq:hover {
+  transform: scale(1.03);
+}
+
+.brand-stacked-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.brand-stacked-text span {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: #FFFFFF;
+  text-transform: uppercase;
+}
+
+.app-title-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.app-name-text {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.18em;
+  color: #FFFFFF;
+  text-transform: uppercase;
+}
+
+.app-function-text {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--tma-gold);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.gold-pill-badge {
+  background: var(--tma-gold);
+  color: var(--tma-navy);
+  font-size: 11px;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 8px 18px;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(201, 166, 107, 0.3);
+  border: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gold-pill-badge:hover {
+  background: var(--tma-gold-light);
+  transform: translateY(-1px);
+}
+
+/* Hero Section */
+.hero {
+  background-color: var(--tma-paper);
+  color: var(--tma-navy);
+  padding: 3.5rem 2rem 2rem 2rem;
+  text-align: center;
+}
+
+.hero-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.hero h1 {
+  color: var(--tma-navy);
+}
+
+.hero p {
+  font-size: 1.1rem;
+  max-width: 800px;
+  margin: 0 auto 1.5rem auto;
+  color: var(--tma-navy);
+  opacity: 0.9;
+}
+
+.promise-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--tma-cream);
+  border: 1px solid var(--tma-line);
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  color: var(--tma-navy);
+  margin-top: 0.5rem;
+}
+
+.feather-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--tma-gold);
+}
+
+/* Main Container */
+.section {
+  padding: 2rem 2rem 4rem 2rem;
+}
+
+.bg-paper {
+  background-color: var(--tma-paper);
+}
+
+/* ==========================================================================
+   2. TMA STITCHED NAVY CARD (#1c3447 + GOLD DASHED BORDER)
+   ========================================================================== */
+.tma-navy-card {
+  background: var(--tma-navy);
+  color: #FFFFFF;
+  border: 2.5px dashed var(--tma-gold);
+  border-radius: 12px;
+  padding: 36px;
+  box-shadow: 0 20px 50px rgba(19, 36, 50, 0.25);
+  position: relative;
+  max-width: 950px;
+  margin: 0 auto 2.5rem auto;
+}
+
+.tma-navy-card h2 {
+  color: var(--tma-gold);
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.panel-desc {
+  color: #E2D7C7;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.samples-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.sample-box {
+  background-color: var(--tma-navy-dark);
+  border: 1px solid rgba(201, 166, 107, 0.4);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.sample-title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.form-label {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--tma-gold);
+  font-size: 1.05rem;
+}
+
+.mb-0 { margin-bottom: 0 !important; }
+
+.required-star {
+  color: var(--tma-rose-dark);
+  font-weight: 700;
+}
+
+.optional-tag {
+  color: var(--tma-gold-light);
+  font-weight: 400;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.word-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  color: var(--tma-gold);
+  transition: all 0.2s ease;
+}
+
+.answer-box-navy, .form-control {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid rgba(201, 166, 107, 0.4);
+  background: var(--tma-navy-dark);
+  border-radius: 6px;
+  padding: 16px;
+  color: #FFFFFF;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.answer-box-navy:focus, .form-control:focus {
+  border-color: var(--tma-gold);
+  box-shadow: 0 0 0 3px rgba(201, 166, 107, 0.2);
+}
+
+/* Primary Gold Button (.btn-primary-gold) */
+.btn-primary-gold {
+  border: 0;
+  border-radius: 999px;
+  background: var(--tma-gold);
+  color: var(--tma-navy);
+  padding: 14px 28px;
+  font-size: 15px;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(201, 166, 107, 0.35);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.btn-primary-gold:hover:not(:disabled) {
+  background: var(--tma-gold-light);
+  transform: translateY(-1px);
+}
+
+.btn-primary-gold:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-large {
+  width: 100%;
+}
+
+.btn-gold-outline {
+  background: transparent;
+  color: var(--tma-navy);
+  border: 1.5px solid var(--tma-gold);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-gold-outline:hover {
+  background: var(--tma-gold);
+  color: var(--tma-navy);
+}
+
+/* ==========================================================================
+   3. TMA REPORT CARD (#FAF6F0 + INK TEXT)
+   ========================================================================== */
+.tma-report-card {
+  background-color: var(--tma-cream);
+  border: 1px solid var(--tma-line);
+  border-radius: 12px;
+  padding: 36px;
+  max-width: 950px;
+  margin: 0 auto 2.5rem auto;
+  box-shadow: 0 10px 30px rgba(28, 52, 71, 0.08);
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1.5px solid var(--tma-line);
+}
+
+.result-header h2 {
+  color: var(--tma-navy);
+  margin-bottom: 0;
+}
+
+.result-subtitle {
+  color: var(--tma-ink);
+  opacity: 0.8;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* Loader */
+.loader {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 3.5rem auto;
+}
+
+.spinner {
+  border: 4px solid var(--tma-line);
+  border-top: 4px solid var(--tma-gold);
+  border-radius: 50%;
+  width: 52px;
+  height: 52px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1.25rem;
+}
+
+.loader-text {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--tma-navy);
+}
+
+.loader-subtext {
+  font-size: 0.9rem;
+  color: var(--tma-ink);
+  opacity: 0.7;
+  margin-top: 0.25rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Markdown Formatting */
+.markdown-body {
+  font-family: var(--font-sans);
+  color: var(--tma-ink);
+  line-height: 1.7;
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+  font-family: var(--font-display);
+  color: var(--tma-navy);
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--tma-line);
+  padding-bottom: 0.4rem;
+}
+
+.markdown-body h1 { font-size: 1.8rem; }
+.markdown-body h2 { font-size: 1.4rem; }
+.markdown-body h3 { font-size: 1.15rem; }
+
+.markdown-body ul, .markdown-body ol {
+  padding-left: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.markdown-body li {
+  margin-bottom: 0.6rem;
+}
+
+.markdown-body p {
+  margin-bottom: 1.25rem;
+}
+
+.markdown-body strong {
+  color: var(--tma-navy);
+  font-weight: 700;
+}
+
+.markdown-body code {
+  background-color: var(--tma-paper);
+  color: var(--tma-navy);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-family: monospace;
+  border: 1px solid var(--tma-line);
+}
+
+/* Footer */
+.footer {
+  background-color: var(--tma-navy);
+  color: #FFFFFF;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  border-top: 1px solid var(--tma-gold);
+}
+
+.footer-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.footer-brand {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--tma-gold);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.footer-promise {
+  font-size: 0.95rem;
+  color: #FFFFFF;
+  margin-bottom: 0.75rem;
+}
+
+.footer-copy {
+  font-size: 0.8rem;
+  color: var(--tma-gold-light);
+  opacity: 0.8;
+}

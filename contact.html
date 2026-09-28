@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact | Tania Vorster</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">Tania Vorster</a>
+    <div class="navbar-nav desktop-nav">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/about.html" class="nav-link">About</a>
+      <a href="/work-history.html" class="nav-link">Work History</a>
+      <a href="/education.html" class="nav-link">Education</a>
+      <a href="/contact.html" class="nav-link">Contact</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Let's map out your next project.</h1>
+      <p>Get in touch to design a custom editing programme.</p>
+    </div>
+  </header>
+
+  <main class="section bg-offwhite">
+    <div class="card" style="max-width: 650px;">
+      <h2 style="text-align: center;">Submit an Enquiry</h2>
+      <p style="margin-bottom: 2rem; text-align: center;">Please fill out the details below to request a manuscript analysis or line editing consultation.</p>
+
+      <form id="contactForm" class="contact-form">
+        <div class="form-group">
+          <label for="contactName" class="form-label">Full Name</label>
+          <input type="text" id="contactName" class="form-control" placeholder="Jane Doe" required />
+        </div>
+
+        <div class="form-group">
+          <label for="contactEmail" class="form-label">Email Address</label>
+          <input type="email" id="contactEmail" class="form-control" placeholder="jane@example.com" required />
+        </div>
+
+        <div class="form-group">
+          <label for="contactService" class="form-label">Service Required</label>
+          <select id="contactService" class="form-control" required>
+            <option value="Line Editing">Line Editing & Restructuring</option>
+            <option value="Style Analysis">Deep Style Analysis & Style Guide</option>
+            <option value="Manuscript Evaluation">Full Manuscript Evaluation</option>
+            <option value="Other">Other Enquiry</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="contactMessage" class="form-label">Project Details & Manuscript Overview</label>
+          <textarea id="contactMessage" class="form-control" rows="5" placeholder="Tell me about your manuscript, genre, approximate word count, and timeline..." required></textarea>
+        </div>
+
+        <button type="submit" id="submitContactBtn" class="btn btn-primary" style="width: 100%;">
+          <i data-lucide="send" style="display: inline-block; width: 18px; margin-bottom: -3px; margin-right: 8px;"></i>
+          Send Enquiry
+        </button>
+      </form>
+
+      <div id="contactSuccess" class="contact-success" style="display: none;">
+        <i data-lucide="check-circle" class="success-icon"></i>
+        <h3>Enquiry Received</h3>
+        <p>Thank you for reaching out! Tania will review your project details and get back to you within 1-2 business days.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 Tania Vorster. All rights reserved.</p>
+  </footer>
+
+  <script type="module" src="/client.js"></script>
+</body>
+</html>

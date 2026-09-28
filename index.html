@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Style Analyst | The Modern Author</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300..800;1,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <!-- Standard TMA 88px Topbar -->
+  <header class="topbar">
+    <div class="brand-group">
+      <img src="/Modern_Author_logo.png" alt="The Modern Author Logo" class="brand-icon-sq" />
+      <div class="brand-stacked-text">
+        <span>THE</span>
+        <span>MODERN</span>
+        <span>AUTHOR</span>
+      </div>
+    </div>
+
+    <div class="app-title-center">
+      <div class="app-name-text">STYLE ANALYST</div>
+      <div class="app-function-text">AUTHOR STYLE GUIDE & PROSE ENGINE</div>
+    </div>
+
+    <div class="header-actions">
+      <button class="gold-pill-badge">FOR AUTHORS</button>
+    </div>
+  </header>
+
+  <!-- Hero Header -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Author Style Guide & Word Document Generator</h1>
+      <p>Submit up to 3 writing samples to analyze your prose style across narrative rhythm, POV distance, dialogue, and syntax habits. Compile your master style guide into a Word document (.docx) ready for AI integration.</p>
+      
+      <div class="promise-bar">
+        <i data-lucide="feather" class="feather-icon"></i>
+        <span><strong>OUR PROMISE:</strong> AI is the tool. You are the author. The story is yours.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Interaction Area -->
+  <main class="section bg-paper">
+    <!-- TMA Navy Card with Gold Stitched Border -->
+    <div class="tma-navy-card">
+      <div class="samples-header">
+        <h2>Submit Writing Samples</h2>
+        <p class="panel-desc">Paste 1 to 3 writing samples (300+ words each) to analyze your prose patterns and compile your author style guide.</p>
+      </div>
+
+      <div class="samples-grid">
+        <!-- Sample 1 -->
+        <div class="form-group sample-box">
+          <div class="sample-title-bar">
+            <label for="sample1" class="form-label mb-0">Writing Sample #1 <span class="required-star">*</span></label>
+            <span id="wordCount1" class="word-badge">0 words</span>
+          </div>
+          <textarea id="sample1" class="answer-box-navy" rows="8" placeholder="Paste Writing Sample #1 here..."></textarea>
+        </div>
+
+        <!-- Sample 2 -->
+        <div class="form-group sample-box">
+          <div class="sample-title-bar">
+            <label for="sample2" class="form-label mb-0">Writing Sample #2 <span class="optional-tag">(Optional)</span></label>
+            <span id="wordCount2" class="word-badge">0 words</span>
+          </div>
+          <textarea id="sample2" class="answer-box-navy" rows="8" placeholder="Paste Writing Sample #2 here..."></textarea>
+        </div>
+
+        <!-- Sample 3 -->
+        <div class="form-group sample-box">
+          <div class="sample-title-bar">
+            <label for="sample3" class="form-label mb-0">Writing Sample #3 <span class="optional-tag">(Optional)</span></label>
+            <span id="wordCount3" class="word-badge">0 words</span>
+          </div>
+          <textarea id="sample3" class="answer-box-navy" rows="8" placeholder="Paste Writing Sample #3 here..."></textarea>
+        </div>
+      </div>
+      
+      <button id="analyzeBtn" class="btn-primary-gold btn-large">
+        <i data-lucide="sparkles" style="display: inline-block; width: 18px; margin-bottom: -2px; margin-right: 8px;"></i>
+        Analyze Prose & Build Style Guide Document
+      </button>
+    </div>
+
+    <!-- Progress Loader -->
+    <div id="loader" class="loader">
+      <div class="spinner"></div>
+      <p id="loaderStatus" class="loader-text">Analyzing prose samples and compiling style guide...</p>
+      <p class="loader-subtext">Executing passage extractions and master style synthesis</p>
+    </div>
+
+    <!-- TMA Output Report Card -->
+    <div id="resultCard" class="tma-report-card" style="display: none;">
+      <div class="result-header">
+        <div>
+          <h2>Generated Author Style Guide</h2>
+          <p class="result-subtitle">All 13 style guide elements + Summarized Rules Checklist are ready below.</p>
+        </div>
+        <div class="result-actions">
+          <button id="downloadDocxBtn" class="btn-primary-gold" title="Download formatted Word Document">
+            <i data-lucide="file-text" style="display: inline-block; width: 16px; margin-bottom: -2px; margin-right: 6px;"></i>
+            Download Word Document (.docx)
+          </button>
+          <button id="copyPromptBtn" class="btn-gold-outline" title="Copy formatted as AI System Prompt">
+            <i data-lucide="bot" style="display: inline-block; width: 16px; margin-bottom: -2px; margin-right: 6px;"></i>
+            Copy AI System Prompt
+          </button>
+          <button id="copyMarkdownBtn" class="btn-gold-outline" title="Copy raw Markdown">
+            <i data-lucide="copy" style="display: inline-block; width: 16px; margin-bottom: -2px; margin-right: 6px;"></i>
+            Copy Markdown
+          </button>
+          <button id="downloadBtn" class="btn-gold-outline" title="Download Markdown (.md)">
+            <i data-lucide="download" style="display: inline-block; width: 16px; margin-bottom: -2px; margin-right: 6px;"></i>
+            Download .md
+          </button>
+        </div>
+      </div>
+
+      <div id="resultContent" class="markdown-body"></div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">THE MODERN AUTHOR</div>
+      <p class="footer-promise">AI is the tool. You are the author. The story is yours.</p>
+      <p class="footer-copy">&copy; 2026 Melissa Forrester &bull; The Modern Author Application Suite</p>
+    </div>
+  </footer>
+
+  <script type="module" src="/client.js"></script>
+</body>
+</html>
