@@ -44,7 +44,7 @@ Writing Sample ${sampleNumber}:
 ${sampleText}`;
 }
 
-function createSynthesisPrompt(sampleExtractions: { sampleNumber: number; extractedText: string }[]): string {
+function createSynthesisPrompt(sampleExtractions: { sampleNumber: number; extractedText: string }[], genre?: string): string {
   const sampleBlocks = sampleExtractions
     .map(s => `<sample_${s.sampleNumber}>\n${s.extractedText}\n</sample_${s.sampleNumber}>`)
     .join('\n\n');
@@ -156,7 +156,7 @@ async function startServer() {
 
   app.post('/api/analyze', async (req, res) => {
     try {
-      const { text, sample1, sample2, sample3, normalText, dialogueText, actionText, comedyText } = req.body;
+      const { text, sample1, sample2, sample3, genre, normalText, dialogueText, actionText, comedyText } = req.body;
       
       const rawSamples: string[] = [];
 
@@ -223,7 +223,7 @@ async function generateWithFallback(ai: GoogleGenAI, prompt: string): Promise<st
       }
 
       // Phase 2: Master Synthesis using all extracted sample passages
-      const synthesisPrompt = createSynthesisPrompt(sampleExtractions);
+      const synthesisPrompt = createSynthesisPrompt(sampleExtractions, genre);
       const resultText = await generateWithFallback(ai, synthesisPrompt);
 
       res.json({

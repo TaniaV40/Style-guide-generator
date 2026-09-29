@@ -1,15 +1,16 @@
 import { marked } from 'marked';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, BorderStyle } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
 
-  // Sample Elements
+  // Input Elements
   const sample1 = document.getElementById('sample1');
   const sample2 = document.getElementById('sample2');
   const sample3 = document.getElementById('sample3');
+  const genreSelect = document.getElementById('genreSelect');
 
   const wordCount1 = document.getElementById('wordCount1');
   const wordCount2 = document.getElementById('wordCount2');
@@ -27,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const downloadBtn = document.getElementById('downloadBtn');
 
   let rawMarkdownResult = '';
+  let lastSampleExtractions = [];
+  let selectedGenre = '';
 
   // Word Count Helper
   const setupWordCounter = (textarea, badge) => {
@@ -54,12 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
   setupWordCounter(sample2, wordCount2);
   setupWordCounter(sample3, wordCount3);
 
-  // Analyze Handler
+  // Analyze Click Handler
   if (analyzeBtn) {
     analyzeBtn.addEventListener('click', async () => {
       const s1 = sample1 ? sample1.value.trim() : '';
       const s2 = sample2 ? sample2.value.trim() : '';
       const s3 = sample3 ? sample3.value.trim() : '';
+      selectedGenre = genreSelect ? genreSelect.value : '';
 
       if (!s1 && !s2 && !s3) {
         alert('Please paste at least Writing Sample #1 before generating.');
@@ -69,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
       analyzeBtn.disabled = true;
       if (loader) loader.style.display = 'flex';
       if (resultCard) resultCard.style.display = 'none';
-      if (loaderStatus) loaderStatus.textContent = 'Analyzing prose samples and generating style guide...';
+      if (loaderStatus) loaderStatus.textContent = 'Analyzing prose samples and compiling style guide...';
 
       try {
         const response = await fetch('/api/analyze', {
@@ -80,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({
             sample1: s1,
             sample2: s2,
-            sample3: s3
+            sample3: s3,
+            genre: selectedGenre
           })
         });
 
@@ -91,10 +96,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         rawMarkdownResult = data.result;
+        lastSampleExtractions = data.sampleExtractions || [];
 
         if (resultContent) {
-          resultContent.innerHTML = marked.parse(rawMarkdownResult);
+          // Add Genre badge at top of preview if selected
+          let displayHtml = '';
+          if (selectedGenre) {
+            displayHtml += `<div style="margin-bottom: 1.5rem; padding: 0.5rem 1rem; background: var(--tma-paper); border-left: 4px solid var(--tma-gold); border-radius: 4px; font-weight: 600;">Genre Context: ${selectedGenre}</div>`;
+          }
+          displayHtml += marked.parse(rawMarkdownResult);
+
+          // Add Extracted Passages preview block
+          if (lastSampleExtractions && lastSampleExtractions.length > 0) {
+            displayHtml += `<hr style="margin: 2.5rem 0; border: 0; border-top: 2px dashed var(--tma-line);" />`;
+            displayHtml += `<h2>Part 2: Extracted Source Passages</h2>`;
+            displayHtml += `<p style="font-style: italic; opacity: 0.85; margin-bottom: 1.5rem;">Below are the verbatim passages extracted from your submitted writing samples that informed this style guide:</p>`;
+            
+            lastSampleExtractions.forEach(ext => {
+              displayHtml += `<div style="margin-bottom: 1.5rem; padding: 1.25rem; background: var(--tma-paper); border-radius: 8px; border: 1px solid var(--tma-line);">${marked.parse(ext.extractedText)}</div>`;
+            });
+          }
+
+          resultContent.innerHTML = displayHtml;
         }
+
         if (resultCard) {
           resultCard.style.display = 'block';
           resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -119,12 +144,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2500);
   };
 
-  // Convert Markdown to Word (.docx) Document
-  const exportToWordDocument = async (markdown) => {
+  // Convert Markdown & Passages to 2-Part Word (.docx) Document
+  const exportToWordDocument = async (markdown, extractions, genre) => {
     const lines = markdown.split('\n');
     const docChildren = [];
 
-    // Add Document Header Title (The Modern Author - TMA Master Design System)
+    // Document Header Title
     docChildren.push(
       new Paragraph({
         children: [
@@ -150,6 +175,14 @@ document.addEventListener('DOMContentLoaded', () => {
             size: 22,
             color: "C9A66B",
           }),
+          ...(genre ? [
+            new TextRun({
+              text: ` (Genre: ${genre})`,
+              size: 20,
+              color: "1C3447",
+              italics: true,
+            })
+          ] : []),
         ],
         spacing: { after: 100 },
       }),
@@ -163,9 +196,21 @@ document.addEventListener('DOMContentLoaded', () => {
           }),
         ],
         spacing: { after: 300 },
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "PART 1: PERSONAL STYLE GUIDE",
+            bold: true,
+            size: 24,
+            color: "1C3447",
+          }),
+        ],
+        spacing: { before: 200, after: 200 },
       })
     );
 
+    // Part 1: Style Guide Paragraphs
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
@@ -177,8 +222,8 @@ document.addEventListener('DOMContentLoaded', () => {
               new TextRun({
                 text: line.replace('# ', ''),
                 bold: true,
-                size: 28,
-                color: "0D1B2A",
+                size: 26,
+                color: "1C3447",
               })
             ],
             heading: HeadingLevel.HEADING_1,
@@ -192,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
               new TextRun({
                 text: line.replace('## ', ''),
                 bold: true,
-                size: 24,
+                size: 22,
                 color: "C9A66B",
               })
             ],
@@ -208,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 text: line.replace('### ', ''),
                 bold: true,
                 size: 20,
-                color: "76B6B8",
+                color: "1C3447",
               })
             ],
             heading: HeadingLevel.HEADING_3,
@@ -219,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const itemText = line.substring(2).trim();
         const children = [];
 
-        // Handle **bold prefix** in list items if present
         const boldMatch = itemText.match(/^(\*\*.*?\*\*|\*.*?\*)(.*)/);
         if (boldMatch) {
           const boldPart = boldMatch[1].replace(/\*/g, '');
@@ -240,7 +284,6 @@ document.addEventListener('DOMContentLoaded', () => {
           })
         );
       } else {
-        // Normal paragraph text
         docChildren.push(
           new Paragraph({
             children: [new TextRun({ text: line })],
@@ -248,6 +291,72 @@ document.addEventListener('DOMContentLoaded', () => {
           })
         );
       }
+    }
+
+    // Part 2: Extracted Source Passages
+    if (extractions && extractions.length > 0) {
+      docChildren.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "PART 2: EXTRACTED SOURCE PASSAGES",
+              bold: true,
+              size: 26,
+              color: "1C3447",
+            }),
+          ],
+          heading: HeadingLevel.HEADING_1,
+          spacing: { before: 600, after: 150 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Below are the actual verbatim passages pulled from your submitted writing samples that informed your style guide, allowing any AI to read your authentic voice directly:",
+              italics: true,
+              size: 18,
+              color: "1C3447",
+            }),
+          ],
+          spacing: { after: 300 },
+        })
+      );
+
+      extractions.forEach(ext => {
+        const extLines = ext.extractedText.split('\n');
+        docChildren.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `--- Writing Sample #${ext.sampleNumber} Extractions ---`,
+                bold: true,
+                size: 20,
+                color: "C9A66B",
+              }),
+            ],
+            spacing: { before: 250, after: 150 },
+          })
+        );
+
+        extLines.forEach(l => {
+          const trimmed = l.trim();
+          if (!trimmed) return;
+          if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
+            docChildren.push(
+              new Paragraph({
+                children: [new TextRun({ text: trimmed.replace(/\*/g, ''), bold: true, color: "1C3447" })],
+                spacing: { before: 150, after: 80 }
+              })
+            );
+          } else {
+            docChildren.push(
+              new Paragraph({
+                children: [new TextRun({ text: trimmed })],
+                spacing: { after: 100 }
+              })
+            );
+          }
+        });
+      });
     }
 
     const doc = new Document({
@@ -277,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const originalHTML = downloadDocxBtn.innerHTML;
         downloadDocxBtn.disabled = true;
-        await exportToWordDocument(rawMarkdownResult);
+        await exportToWordDocument(rawMarkdownResult, lastSampleExtractions, selectedGenre);
         showButtonFeedback(downloadDocxBtn, 'Word Doc Downloaded!', originalHTML, 'check');
       } catch (err) {
         console.error('Failed to generate Word document:', err);
@@ -292,11 +401,18 @@ document.addEventListener('DOMContentLoaded', () => {
   if (copyPromptBtn) {
     copyPromptBtn.addEventListener('click', async () => {
       if (!rawMarkdownResult) return;
+      
+      let passagesText = '';
+      if (lastSampleExtractions && lastSampleExtractions.length > 0) {
+        passagesText = `\n\n--- EXTRACTED VOICE PASSAGES ---\n` + 
+          lastSampleExtractions.map(e => e.extractedText).join('\n\n');
+      }
+
       const systemPromptText = `You are an expert ghostwriter and fiction assistant. You MUST write all future prose in accordance with the following author style guide:
 
---- AUTHOR STYLE GUIDE ---
+${selectedGenre ? `Genre Context: ${selectedGenre}\n` : ''}--- AUTHOR STYLE GUIDE ---
 ${rawMarkdownResult}
---- END AUTHOR STYLE GUIDE ---
+--- END AUTHOR STYLE GUIDE ---${passagesText}
 
 Instructions:
 - Adhere strictly to the Summarized Style Rules (Do's and Avoid's).

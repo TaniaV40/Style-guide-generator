@@ -57,7 +57,7 @@ Writing Sample ${sampleNumber}:
 ${sampleText}`;
 }
 
-function createSynthesisPrompt(sampleExtractions: { sampleNumber: number; extractedText: string }[]): string {
+function createSynthesisPrompt(sampleExtractions: { sampleNumber: number; extractedText: string }[], genre?: string): string {
   const sampleBlocks = sampleExtractions
     .map(s => `<sample_${s.sampleNumber}>\n${s.extractedText}\n</sample_${s.sampleNumber}>`)
     .join('\n\n');
@@ -167,7 +167,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { text, sample1, sample2, sample3, normalText, dialogueText, actionText, comedyText } = req.body || {};
+    const { text, sample1, sample2, sample3, genre, normalText, dialogueText, actionText, comedyText } = req.body || {};
     
     const rawSamples: string[] = [];
     if (sample1 && sample1.trim()) rawSamples.push(sample1.trim());
@@ -208,7 +208,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const synthesisPrompt = createSynthesisPrompt(sampleExtractions);
+    const synthesisPrompt = createSynthesisPrompt(sampleExtractions, genre);
     const resultText = await generateWithFallback(ai, synthesisPrompt);
 
     return res.status(200).json({

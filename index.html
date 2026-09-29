@@ -36,7 +36,7 @@
   <section class="hero">
     <div class="hero-content">
       <h1>Author Style Guide & Word Document Generator</h1>
-      <p>Submit up to 3 writing samples to analyze your prose style across narrative rhythm, POV distance, dialogue, and syntax habits. Compile your master style guide into a Word document (.docx) ready for AI integration.</p>
+      <p>Submit up to 3 writing samples and get a full breakdown of your prose style, sentence rhythm, dialogue voice, tone, punctuation habits, and more, compiled into a Word document (.docx) ready to guide any AI you write with.</p>
       
       <div class="promise-bar">
         <i data-lucide="feather" class="feather-icon"></i>
@@ -51,7 +51,27 @@
     <div class="tma-navy-card">
       <div class="samples-header">
         <h2>Submit Writing Samples</h2>
-        <p class="panel-desc">Paste 1 to 3 writing samples (300+ words each) to analyze your prose patterns and compile your author style guide.</p>
+        <p class="panel-desc">Paste 1 to 3 writing samples, 300 words minimum each. For the best results, a sample that includes some description, some dialogue, and one tense or emotional moment will give the tool the most to work with. A short sample still works, some categories in your guide may just come out lighter than others, which is normal and not a sign anything went wrong. If you don't have finished chapters yet, any piece of your own writing works: a short story, a journal entry, even a scene you never finished.</p>
+      </div>
+
+      <!-- Genre Dropdown (Step 4 Spec) -->
+      <div class="form-group genre-box mb-4">
+        <label for="genreSelect" class="form-label mb-1">Genre <span class="optional-tag">(for context only, this does not change how your style is analyzed)</span></label>
+        <select id="genreSelect" class="answer-box-navy form-select">
+          <option value="">-- Select Genre (Optional) --</option>
+          <option value="Romance">Romance</option>
+          <option value="Thriller">Thriller</option>
+          <option value="Mystery">Mystery</option>
+          <option value="Horror">Horror</option>
+          <option value="Fantasy">Fantasy</option>
+          <option value="Science Fiction">Science Fiction</option>
+          <option value="LitRPG">LitRPG</option>
+          <option value="Cozy">Cozy</option>
+        </select>
+      </div>
+
+      <div class="samples-notice-bar">
+        <span class="required-note">Only Writing Sample #1 is required.</span>
       </div>
 
       <div class="samples-grid">
@@ -82,6 +102,16 @@
           <textarea id="sample3" class="answer-box-navy" rows="8" placeholder="Paste Writing Sample #3 here..."></textarea>
         </div>
       </div>
+
+      <div class="comedy-notice">
+        <i data-lucide="info" class="notice-icon"></i>
+        <span>Not every story has comedic moments. If yours doesn't, that section of your guide will simply be left out, this isn't an error.</span>
+      </div>
+
+      <div class="output-explanation-bar">
+        <i data-lucide="file-check-2" class="explanation-icon"></i>
+        <span>You'll receive a Word document with two parts: your personal style guide, and the actual passages pulled from your writing that it was built from, so any AI you use afterward can read your voice, not just a description of it.</span>
+      </div>
       
       <button id="analyzeBtn" class="btn-primary-gold btn-large">
         <i data-lucide="sparkles" style="display: inline-block; width: 18px; margin-bottom: -2px; margin-right: 8px;"></i>
@@ -93,7 +123,7 @@
     <div id="loader" class="loader">
       <div class="spinner"></div>
       <p id="loaderStatus" class="loader-text">Analyzing prose samples and compiling style guide...</p>
-      <p class="loader-subtext">Executing passage extractions and master style synthesis</p>
+      <p class="loader-subtext">Extracting verbatim passages & synthesizing style directives</p>
     </div>
 
     <!-- TMA Output Report Card -->
@@ -101,7 +131,7 @@
       <div class="result-header">
         <div>
           <h2>Generated Author Style Guide</h2>
-          <p class="result-subtitle">All 13 style guide elements + Summarized Rules Checklist are ready below.</p>
+          <p class="result-subtitle">Your personal style guide + extracted source passages are compiled below.</p>
         </div>
         <div class="result-actions">
           <button id="downloadDocxBtn" class="btn-primary-gold" title="Download formatted Word Document">
