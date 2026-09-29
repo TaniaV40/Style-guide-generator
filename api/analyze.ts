@@ -1,26 +1,56 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
+import OpenAI from 'openai';
 
-const MODELS_TO_TRY = ['gemini-3.8-flash', 'gemini-3.6-flash'];
+async function generateText(prompt: string): Promise<string> {
+  const openAiKey = process.env.OPENAI_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
 
-async function generateWithFallback(ai: GoogleGenAI, prompt: string): Promise<string> {
-  let lastError: any = null;
-  for (const modelName of MODELS_TO_TRY) {
+  const errors: string[] = [];
+
+  // 1. Try OpenAI ChatGPT if OPENAI_API_KEY is provided
+  if (openAiKey) {
     try {
-      const response = await ai.models.generateContent({
-        model: modelName,
-        contents: prompt,
+      const openai = new OpenAI({ apiKey: openAiKey });
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
       });
-      if (response && response.text) {
-        return response.text;
+      const resultText = completion.choices[0]?.message?.content;
+      if (resultText) {
+        return resultText;
       }
     } catch (err: any) {
-      console.warn(`Model ${modelName} failed, trying fallback:`, err.message || err);
-      lastError = err;
-      await new Promise(r => setTimeout(r, 500));
+      console.warn('OpenAI API error:', err.message || err);
+      errors.push(`OpenAI: ${err.message || err}`);
     }
   }
-  throw lastError || new Error('All model attempts failed');
+
+  // 2. Try Gemini if GEMINI_API_KEY is provided or as fallback
+  if (geminiKey) {
+    const ai = new GoogleGenAI({ apiKey: geminiKey });
+    const geminiModels = ['gemini-3.8-flash', 'gemini-3.6-flash'];
+    for (const modelName of geminiModels) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+        });
+        if (response && response.text) {
+          return response.text;
+        }
+      } catch (err: any) {
+        console.warn(`Gemini ${modelName} error:`, err.message || err);
+        errors.push(`Gemini (${modelName}): ${err.message || err}`);
+      }
+    }
+  }
+
+  if (!openAiKey && !geminiKey) {
+    throw new Error('Neither OPENAI_API_KEY nor GEMINI_API_KEY is set in Vercel Environment Variables.');
+  }
+
+  throw new Error(`Generation failed across configured providers. ${errors.join('; ')}`);
 }
 
 function createExtractionPrompt(sampleNumber: number, sampleText: string): string {
@@ -62,7 +92,9 @@ function createSynthesisPrompt(sampleExtractions: { sampleNumber: number; extrac
     .map(s => `<sample_${s.sampleNumber}>\n${s.extractedText}\n</sample_${s.sampleNumber}>`)
     .join('\n\n');
 
-  return `${sampleBlocks}
+  const genreContextStr = genre ? `Genre Context: ${genre} (for context only, analyze prose style strictly based on the samples provided)\n\n` : '';
+
+  return `${genreContextStr}${sampleBlocks}
 
 Given the above writing samples, I want you to draft a prose style sheet, giving instructions on how to write like these samples, and even including small snippets from the samples as examples of your recommendations.
 
@@ -189,18 +221,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'At least one writing sample is required.' });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY environment variable is not configured.' });
-    }
-
-    const ai = new GoogleGenAI({ apiKey });
     const sampleExtractions: { sampleNumber: number; extractedText: string }[] = [];
 
     for (let i = 0; i < rawSamples.length; i++) {
       const sampleNum = i + 1;
       const extractionPrompt = createExtractionPrompt(sampleNum, rawSamples[i]);
-      const extractedText = await generateWithFallback(ai, extractionPrompt);
+      const extractedText = await generateText(extractionPrompt);
 
       sampleExtractions.push({
         sampleNumber: sampleNum,
@@ -209,7 +235,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const synthesisPrompt = createSynthesisPrompt(sampleExtractions, genre);
-    const resultText = await generateWithFallback(ai, synthesisPrompt);
+    const resultText = await generateText(synthesisPrompt);
 
     return res.status(200).json({
       result: resultText,

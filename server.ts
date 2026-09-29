@@ -1,14 +1,70 @@
 import express from 'express';
+import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
-import dotenv from 'dotenv';
+import OpenAI from 'openai';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const app = express();
+const PORT = Number(process.env.PORT) || 3005;
+
+app.use(express.json({ limit: '10mb' }));
+
+async function generateText(prompt: string): Promise<string> {
+  const openAiKey = process.env.OPENAI_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
+
+  const errors: string[] = [];
+
+  // 1. Try OpenAI ChatGPT if OPENAI_API_KEY is provided
+  if (openAiKey) {
+    try {
+      const openai = new OpenAI({ apiKey: openAiKey });
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+      });
+      const resultText = completion.choices[0]?.message?.content;
+      if (resultText) {
+        return resultText;
+      }
+    } catch (err: any) {
+      console.warn('OpenAI API error:', err.message || err);
+      errors.push(`OpenAI: ${err.message || err}`);
+    }
+  }
+
+  // 2. Try Gemini if GEMINI_API_KEY is provided or as fallback
+  if (geminiKey) {
+    const ai = new GoogleGenAI({ apiKey: geminiKey });
+    const geminiModels = ['gemini-3.8-flash', 'gemini-3.6-flash'];
+    for (const modelName of geminiModels) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+        });
+        if (response && response.text) {
+          return response.text;
+        }
+      } catch (err: any) {
+        console.warn(`Gemini ${modelName} error:`, err.message || err);
+        errors.push(`Gemini (${modelName}): ${err.message || err}`);
+      }
+    }
+  }
+
+  if (!openAiKey && !geminiKey) {
+    throw new Error('Neither OPENAI_API_KEY nor GEMINI_API_KEY is set in environment variables.');
+  }
+
+  throw new Error(`Generation failed across configured providers. ${errors.join('; ')}`);
+}
 
 function createExtractionPrompt(sampleNumber: number, sampleText: string): string {
   return `Your task is to look at the writing sample below and select passages for it to use later.
@@ -49,7 +105,9 @@ function createSynthesisPrompt(sampleExtractions: { sampleNumber: number; extrac
     .map(s => `<sample_${s.sampleNumber}>\n${s.extractedText}\n</sample_${s.sampleNumber}>`)
     .join('\n\n');
 
-  return `${sampleBlocks}
+  const genreContextStr = genre ? `Genre Context: ${genre} (for context only, analyze prose style strictly based on the samples provided)\n\n` : '';
+
+  return `${genreContextStr}${sampleBlocks}
 
 Given the above writing samples, I want you to draft a prose style sheet, giving instructions on how to write like these samples, and even including small snippets from the samples as examples of your recommendations.
 
@@ -126,7 +184,7 @@ Use the following exact structure in your response:
 ## 11. Clause Structure and Complexity
 - **Typical clause types:** Describe the balance of simple, compound, and complex sentences.
 - **Stacking vs splitting:** Explain how often the author stacks multiple clauses in one sentence compared to splitting ideas into separate sentences. Give specific examples.
-- **Subordination patterns:** Note any recurring use of subordinating structures (for example, “because,” “although,” “even though”) and how they shape the feel of the prose.
+- **Subordination patterns:** Note any recurring use of subordinating structures (for example, “because,” “although,” "even though”) and how they shape the feel of the prose.
 
 ## 12. Punctuation Habits (No Em Dashes)
 - **Core punctuation tools:** Describe how the author uses commas, semicolons, colons, parentheses, ellipses, question marks, and exclamation marks.
@@ -148,108 +206,66 @@ Use the following exact structure in your response:
 Do not focus on specific characters or other details from the samples, just focus on the prose style. The style sheet should be thorough.`;
 }
 
-async function startServer() {
-  const app = express();
-  const PORT = Number(process.env.PORT) || 3005;
+app.post('/api/analyze', async (req, res) => {
+  try {
+    const { text, sample1, sample2, sample3, genre, normalText, dialogueText, actionText, comedyText } = req.body;
+    
+    const rawSamples: string[] = [];
 
-  app.use(express.json({ limit: '10mb' }));
+    if (sample1 && sample1.trim()) rawSamples.push(sample1.trim());
+    if (sample2 && sample2.trim()) rawSamples.push(sample2.trim());
+    if (sample3 && sample3.trim()) rawSamples.push(sample3.trim());
 
-  app.post('/api/analyze', async (req, res) => {
-    try {
-      const { text, sample1, sample2, sample3, genre, normalText, dialogueText, actionText, comedyText } = req.body;
-      
-      const rawSamples: string[] = [];
-
-      if (sample1 && sample1.trim()) rawSamples.push(sample1.trim());
-      if (sample2 && sample2.trim()) rawSamples.push(sample2.trim());
-      if (sample3 && sample3.trim()) rawSamples.push(sample3.trim());
-
-      if (rawSamples.length === 0 && text && text.trim()) {
-        rawSamples.push(text.trim());
-      }
-
-      if (rawSamples.length === 0 && (normalText || dialogueText || actionText || comedyText)) {
-        const parts = [];
-        if (normalText) parts.push(`NORMAL TEXT:\n${normalText}`);
-        if (dialogueText) parts.push(`DIALOGUE TEXT:\n${dialogueText}`);
-        if (actionText) parts.push(`ACTION TEXT:\n${actionText}`);
-        if (comedyText) parts.push(`COMEDY TEXT:\n${comedyText}`);
-        rawSamples.push(parts.join('\n\n'));
-      }
-
-      if (rawSamples.length === 0) {
-        return res.status(400).json({ error: 'At least one writing sample is required.' });
-      }
-
-      if (!process.env.GEMINI_API_KEY) {
-        return res.status(500).json({ error: 'GEMINI_API_KEY is not configured.' });
-      }
-
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const sampleExtractions: { sampleNumber: number; extractedText: string }[] = [];
-
-const MODELS_TO_TRY = ['gemini-3.8-flash', 'gemini-3.6-flash'];
-
-async function generateWithFallback(ai: GoogleGenAI, prompt: string): Promise<string> {
-  let lastError: any = null;
-  for (const modelName of MODELS_TO_TRY) {
-    try {
-      const response = await ai.models.generateContent({
-        model: modelName,
-        contents: prompt,
-      });
-      if (response && response.text) {
-        return response.text;
-      }
-    } catch (err: any) {
-      console.warn(`Model ${modelName} failed, trying fallback:`, err.message || err);
-      lastError = err;
-      await new Promise(r => setTimeout(r, 500));
+    if (rawSamples.length === 0 && text && text.trim()) {
+      rawSamples.push(text.trim());
     }
-  }
-  throw lastError || new Error('All model attempts failed');
-}
 
-      // Phase 1: Extract 300-word passages for each provided writing sample
-      for (let i = 0; i < rawSamples.length; i++) {
-        const sampleNum = i + 1;
-        const extractionPrompt = createExtractionPrompt(sampleNum, rawSamples[i]);
-        const extractedText = await generateWithFallback(ai, extractionPrompt);
-
-        sampleExtractions.push({
-          sampleNumber: sampleNum,
-          extractedText
-        });
-      }
-
-      // Phase 2: Master Synthesis using all extracted sample passages
-      const synthesisPrompt = createSynthesisPrompt(sampleExtractions, genre);
-      const resultText = await generateWithFallback(ai, synthesisPrompt);
-
-      res.json({
-        result: resultText,
-        sampleExtractions
-      });
-    } catch (error: any) {
-      console.error('API Error:', error);
-      res.status(500).json({ error: error.message || 'An unknown error occurred' });
+    if (rawSamples.length === 0 && (normalText || dialogueText || actionText || comedyText)) {
+      const parts = [];
+      if (normalText) parts.push(`NORMAL TEXT:\n${normalText}`);
+      if (dialogueText) parts.push(`DIALOGUE TEXT:\n${dialogueText}`);
+      if (actionText) parts.push(`ACTION TEXT:\n${actionText}`);
+      if (comedyText) parts.push(`COMEDY TEXT:\n${comedyText}`);
+      rawSamples.push(parts.join('\n\n'));
     }
-  });
 
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'mpa',
+    if (rawSamples.length === 0) {
+      return res.status(400).json({ error: 'At least one writing sample is required.' });
+    }
+
+    const sampleExtractions: { sampleNumber: number; extractedText: string }[] = [];
+
+    for (let i = 0; i < rawSamples.length; i++) {
+      const sampleNum = i + 1;
+      const extractionPrompt = createExtractionPrompt(sampleNum, rawSamples[i]);
+      const extractedText = await generateText(extractionPrompt);
+
+      sampleExtractions.push({
+        sampleNumber: sampleNum,
+        extractedText
+      });
+    }
+
+    const synthesisPrompt = createSynthesisPrompt(sampleExtractions, genre);
+    const resultText = await generateText(synthesisPrompt);
+
+    res.json({
+      result: resultText,
+      sampleExtractions
     });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+  } catch (error: any) {
+    console.error('API Error:', error);
+    res.status(500).json({ error: error.message || 'An unknown error occurred' });
   }
+});
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, '../dist')));
 
-startServer();
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
