@@ -66,25 +66,26 @@ I want you to do the following:
 3. Select roughly 300 words of an action scene or highly dramatic moment. Reproduce this passage exactly as it appears in the source, character-for-character, including original paragraph breaks.
 4. If the sample contains comedic moments, select roughly 300 words of a comedic scene. Reproduce this passage exactly as it appears in the source, character-for-character, including original paragraph breaks. If there are NO comedic moments in the sample, leave the Comedy Text section out entirely rather than printing a placeholder.
 
-After selecting each passage, count its words. If it differs from the source passage, confirm you have not dropped or altered any sentences, words, or paragraph breaks.
+Word-Count & Integrity Check:
+After selecting each passage, count its words. If it differs from the selected source range by more than a few words, you have dropped or altered content; re-select the passage from the original text to ensure 100% sentence and paragraph preservation.
 
-Format your response in Markdown using the following format:
+Format your response in Markdown using the following exact structure:
 
 **Sample ${sampleNumber} Normal Text:**
 
-[INSERT 300 WORDS OF TEXT PULLED VERBATIM FROM THE SAMPLE BELOW]
+[INSERT ~300 WORDS OF TEXT PULLED VERBATIM FROM THE SAMPLE BELOW, PRESERVING ALL ORIGINAL PARAGRAPH BREAKS]
 
 **Sample ${sampleNumber} Dialogue Text:**
 
-[INSERT 300 WORDS OF TEXT PULLED VERBATIM FROM THE SAMPLE BELOW]
+[INSERT ~300 WORDS OF TEXT PULLED VERBATIM FROM THE SAMPLE BELOW, PRESERVING ALL ORIGINAL PARAGRAPH BREAKS]
 
 **Sample ${sampleNumber} Action Text:**
 
-[INSERT 300 WORDS OF TEXT PULLED VERBATIM FROM THE SAMPLE BELOW]
+[INSERT ~300 WORDS OF TEXT PULLED VERBATIM FROM THE SAMPLE BELOW, PRESERVING ALL ORIGINAL PARAGRAPH BREAKS]
 
 **Sample ${sampleNumber} Comedy Text:** [Omit section completely if there are no comedic scenes in the sample.]
 
-[INSERT 300 WORDS OF TEXT PULLED VERBATIM FROM THE SAMPLE BELOW]
+[INSERT ~300 WORDS OF TEXT PULLED VERBATIM FROM THE SAMPLE BELOW, PRESERVING ALL ORIGINAL PARAGRAPH BREAKS]
 
 If the writing sample input field below is empty, print "No writing sample." instead.
 
@@ -107,21 +108,29 @@ This style sheet is intended for use by an LLM to write fiction in the same styl
 
 Follow these rules carefully:
 
-1. Base all observations ONLY on the provided samples. Do not invent habits or quote text that does not exist in the samples.
+1. Base all observations ONLY on the provided samples. Do not invent habits, claim punctuation that is not present, or quote text that does not exist in the samples.
 
-2. CRITICAL VERBATIM QUOTING RULE: Every quoted example MUST be copied character-for-character from the sample text, including its original punctuation, spelling, grammar, and any errors.
+2. CRITICAL VERBATIM QUOTING RULE: Every quoted example MUST be copied character-for-character from the sample text, including its original punctuation, spelling, grammar, and any first-draft errors.
    - Do NOT correct grammar, fix typos, complete sentences, add or remove contractions, or change punctuation in a quote.
    - Do NOT substitute a pronoun or generic reference for a character's name, or a character's name for a pronoun.
    - If a quote must be shortened, cut ONLY from the end and mark the cut with an ellipsis ("..."), never mid-clause without marking it.
    - If you cannot find a real, verbatim quote that demonstrates a claim, do not invent one and do not include that claim.
 
-3. EVIDENCE-MATCH RULE: Every quoted example MUST directly demonstrate the specific claim it is attached to before including it. A quote drawn from a different character's dialogue must NOT be used as evidence of the point-of-view character's internal traits unless the section is explicitly about dialogue in general.
+3. EVIDENCE-MATCH & GRAMMAR TERMINOLOGY RULE: 
+   - Every quoted example MUST directly demonstrate the specific claim it is attached to before including it. A quote drawn from a different character's dialogue must NOT be used as evidence of the point-of-view character's internal traits unless the section is explicitly about dialogue in general.
+   - Double-check any grammatical terminology (e.g. adverbs vs conjunctions, clause types) before naming them to ensure 100% technical accuracy.
 
-4. PUNCTUATION ACCURACY RULE: Before writing Section 12 (Punctuation Habits) and the checklist, list every punctuation mark you are about to claim the author uses. For each one, confirm it appears at least once in the actual sample text. If a mark (e.g. ellipses, semicolons, colons, parentheses) does not appear in the sample, do NOT claim the author uses it, and do NOT recommend it in the checklist.
+4. SENTENCE LENGTH GROUNDING RULE (CRITICAL): Before writing Section 6 (Average Sentence Length and Rhythm) and Section 11 (Clause Structure and Complexity), identify the three longest sentences and the three shortest sentences in the combined samples. Base your length and complexity claims strictly on what these actual sentences show, not on a generic assumption about the genre or tone. If the sample contains long, multi-clause stacked sentences, state so explicitly, and do NOT recommend "splitting ideas" or avoiding complexity in the Do/Avoid lists unless the sample itself demonstrates a preference for short, simple sentences.
 
-5. AVOID LIST RULE: Every item in the Avoid list MUST correspond directly to something observed in the sample (a habit to stop, or the direct opposite of a Do item). Do NOT include generic craft or storytelling advice (such as plot, characterization, or story-level pacing) that is not a prose-style observation. Limit the Avoid list strictly to 8–10 concrete, deliberate items rather than generic padding.
+5. PUNCTUATION ACCURACY & TRUNCATION SEPARATION RULE: 
+   - List every punctuation mark you are about to claim the author uses. For each one, confirm it appears at least once in the actual untruncated sample text.
+   - Any ellipsis ("...") you add yourself to shorten a quotation is a truncation mark, NOT evidence of the author's style. Before writing Section 12 (Punctuation Habits) or recommending ellipses anywhere in the checklist, re-check the full, untruncated sample text. ONLY claim the author uses ellipses if an ellipsis appears in the original sample text itself.
 
-6. SELF-CHECK BEFORE FINALIZING: Before finalizing your response, re-read every quoted example against the sample text one more time. If any quote does not match the sample exactly character-for-character, replace it with a real verbatim quote or remove the claim.
+6. AVOID LIST RULE: Every item in the Avoid list MUST correspond directly to something observed in the sample (a habit to stop, or the direct opposite of a Do item). Do NOT include generic craft or storytelling advice (such as plot, characterization, or story-level pacing) that is not a prose-style observation. Limit the Avoid list strictly to 8–10 concrete, deliberate items rather than generic padding.
+
+7. SELF-CHECK & CONSISTENCY BEFORE FINALIZING: 
+   - Re-read every quoted example against the sample text one more time. If any quote does not match the sample exactly character-for-character, replace it with a real verbatim quote or remove the claim.
+   - Ensure Section 7 bullet points (paragraph length vs paragraph function) are mutually consistent and do not contradict each other.
 
 Analyze the writing and create a style guide that covers ONLY the following elements:
 
@@ -146,7 +155,7 @@ Use the following exact structure in your response:
 
 ## 1. Narrative Rhythm
 - **Summary:** One–two sentences describing the overall pacing and rhythm.
-- **Key traits:** Bullet list of 3–5 specific rhythmic habits with verbatim examples (e.g., mix of short/long sentences, use of pauses, etc.).
+- **Key traits:** Bullet list of 3–5 specific rhythmic habits with exact verbatim examples (e.g., mix of short/long sentences, use of pauses, etc.).
 
 ## 2. Close vs Distant POV
 - **POV distance:** Explain whether the POV feels very close, moderately close, or distant. (Note: focus only on the distance here, do not mention the actual POV such as first person or third person, as this will be determined at a later stage. Refer to distance, show vs tell, deep point of view, as relevant).
@@ -165,12 +174,12 @@ Use the following exact structure in your response:
 - **Common emotions:** List the emotions that show up most often in the writing with exact verbatim examples from the text.
 
 ## 6. Average Sentence Length and Rhythm
-- **Sentence length:** Characterize the average sentence length (short, medium, long) and variation. 
-- **Rhythmic patterns:** Note recurring patterns such as clusters of short sentences, long flowing sentences, fragments, or frequent use of questions, with exact verbatim examples.
+- **Sentence length:** Characterize the average sentence length based on the actual sample sentence range (identify longest and shortest sentences in the sample).
+- **Rhythmic patterns:** Note recurring patterns such as clusters of short sentences, long flowing multi-clause sentences, fragments, or frequent use of questions, with exact verbatim examples.
 
 ## 7. Paragraphing
 - **Paragraph length:** Describe typical paragraph length (short, medium, long) and variation.
-- **Paragraph function:** Explain how paragraphs are used (e.g., one idea per paragraph, frequent line breaks for emphasis, long blended paragraphs, etc.).
+- **Paragraph function:** Explain how paragraphs are used (e.g., one idea per paragraph, frequent line breaks for emphasis, long blended paragraphs, etc.), ensuring paragraph length and function bullets are mutually consistent.
 
 ## 8. Average Grade Level
 - **Estimated grade level:** Provide an estimated grade-level (a specific grade, not a range).
@@ -178,20 +187,20 @@ Use the following exact structure in your response:
 
 ## 9. Dialogue Style
 - **Voice and realism:** Characterize how natural, stylized, or heightened the dialogue feels.
-- **Tag and beat usage:** Note patterns in dialogue tags (e.g., mostly “said,” varied tags) and action beats. Encourage, in your instruction, to mostly use "said" or "asked" or dialogue beats.
+- **Tag and beat usage:** Note patterns in dialogue tags (e.g., mostly “said,” varied tags) and action beats based strictly on dialogue tags actually present in the sample. Encourage, in your instruction, to mostly use "said" or "asked" or dialogue beats.
 
 ## 10. Sentence Openings
-- **Common opening patterns:** Describe the most frequent ways sentences begin (for example, with pronouns, character names, conjunctions, adverbs, or prepositional phrases).
+- **Common opening patterns:** Describe the most frequent ways sentences begin (for example, with pronouns, character names, conjunctions, adverbs, or prepositional phrases). Double-check grammatical word-class labels.
 - **Variety vs repetition:** Explain whether sentence openings feel varied or repetitive.
 - **Distinctive habits:** List any notable quirks (for example, frequent use of “And/But/So” at the start of sentences) and whether they should be treated as features to preserve, eliminate, or mix in occasionally.
 
 ## 11. Clause Structure and Complexity
 - **Typical clause types:** Describe the balance of simple, compound, and complex sentences.
-- **Stacking vs splitting:** Explain how often the author stacks multiple clauses in one sentence compared to splitting ideas into separate sentences, with exact verbatim examples.
+- **Stacking vs splitting:** Explain how often the author stacks multiple clauses in one sentence compared to splitting ideas into separate sentences, supported by exact verbatim examples. Base recommendations on whether the author actually stacks or splits clauses in the sample.
 - **Subordination patterns:** Note any recurring use of subordinating structures (for example, “because,” “although,” “even though”) and how they shape the feel of the prose.
 
 ## 12. Punctuation Habits (No Em Dashes)
-- **Core punctuation tools:** Describe how the author uses commas, semicolons, colons, parentheses, ellipses, question marks, and exclamation marks. ONLY claim marks that actually appear in the sample text.
+- **Core punctuation tools:** Describe how the author uses commas, semicolons, colons, parentheses, ellipses, question marks, and exclamation marks. ONLY claim marks that actually appear in the original sample text (do NOT count your own quote truncation marks).
 - **Constraints and guidance:** 
   - Explicitly state that em dashes must NOT be used when imitating this style.
   - Suggest which other punctuation marks should be used instead of em dashes to achieve similar effects (for example, commas, periods, etc.).
