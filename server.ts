@@ -188,7 +188,7 @@ async function startServer() {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const sampleExtractions: { sampleNumber: number; extractedText: string }[] = [];
 
-const MODELS_TO_TRY = ['gemini-3.6-flash', 'gemini-2.5-flash'];
+const MODELS_TO_TRY = ['gemini-3.8-flash', 'gemini-3.6-flash'];
 
 async function generateWithFallback(ai: GoogleGenAI, prompt: string): Promise<string> {
   let lastError: any = null;
