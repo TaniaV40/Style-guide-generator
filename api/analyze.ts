@@ -31,17 +31,20 @@ async function generateText(prompt: string): Promise<string> {
     const ai = new GoogleGenAI({ apiKey: geminiKey });
     const geminiModels = ['gemini-3.8-flash', 'gemini-3.6-flash'];
     for (const modelName of geminiModels) {
-      try {
-        const response = await ai.models.generateContent({
-          model: modelName,
-          contents: prompt,
-        });
-        if (response && response.text) {
-          return response.text;
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: prompt,
+          });
+          if (response && response.text) {
+            return response.text;
+          }
+        } catch (err: any) {
+          console.warn(`Gemini ${modelName} attempt ${attempt} error:`, err.message || err);
+          errors.push(`Gemini (${modelName} attempt ${attempt}): ${err.message || err}`);
+          await new Promise(r => setTimeout(r, 1000 * attempt));
         }
-      } catch (err: any) {
-        console.warn(`Gemini ${modelName} error:`, err.message || err);
-        errors.push(`Gemini (${modelName}): ${err.message || err}`);
       }
     }
   }
@@ -54,16 +57,18 @@ async function generateText(prompt: string): Promise<string> {
 }
 
 function createExtractionPrompt(sampleNumber: number, sampleText: string): string {
-  return `Your task is to look at the writing sample below and select passages for it to use later.
+  return `Your task is to look at the writing sample below and select representative passages for it to use later.
 
 I want you to do the following:
 
-1. Select 300 words of general text for more calmer moments that has more description and such, with less dialogue or action. Reproduce these 300 words verbatim.
-2. Select 300 words of text that have more dialogue and conversation in them. Reproduce these 300 words verbatim.
-3. Select 300 words of an action scene or highly dramatic moment. Reproduce these 300 words verbatim.
-4. If the sample appears to be a comedy, or has highly comedic moments, include an additional 300 words of a comedic scene. Reproduce these 300 words verbatim. If there is NOT a comedy scene in the samples, leave blank.
+1. Select roughly 300 words of general text for calmer moments, more description, less dialogue or action. Reproduce this passage exactly as it appears in the source, character-for-character, including every sentence in the selected range and the original paragraph breaks. Do not skip, merge, smooth grammar, or summarise any sentence within the passage you select.
+2. Select roughly 300 words of text that have more dialogue and conversation in them. Reproduce this passage exactly as it appears in the source, character-for-character, including original paragraph breaks and exact punctuation/spelling.
+3. Select roughly 300 words of an action scene or highly dramatic moment. Reproduce this passage exactly as it appears in the source, character-for-character, including original paragraph breaks.
+4. If the sample contains comedic moments, select roughly 300 words of a comedic scene. Reproduce this passage exactly as it appears in the source, character-for-character, including original paragraph breaks. If there are NO comedic moments in the sample, leave the Comedy Text section out entirely rather than printing a placeholder.
 
-Format your response in Markdown using the following format.
+After selecting each passage, count its words. If it differs from the source passage, confirm you have not dropped or altered any sentences, words, or paragraph breaks.
+
+Format your response in Markdown using the following format:
 
 **Sample ${sampleNumber} Normal Text:**
 
@@ -77,11 +82,11 @@ Format your response in Markdown using the following format.
 
 [INSERT 300 WORDS OF TEXT PULLED VERBATIM FROM THE SAMPLE BELOW]
 
-**Sample ${sampleNumber} Comedy Text:** [don't include if there is no comedic scenes in the sample.]
+**Sample ${sampleNumber} Comedy Text:** [Omit section completely if there are no comedic scenes in the sample.]
 
 [INSERT 300 WORDS OF TEXT PULLED VERBATIM FROM THE SAMPLE BELOW]
 
-If there is no writing sample below, simply print "No writing sample." instead.
+If the writing sample input field below is empty, print "No writing sample." instead.
 
 Writing Sample ${sampleNumber}:
 ${sampleText}`;
@@ -96,17 +101,29 @@ function createSynthesisPrompt(sampleExtractions: { sampleNumber: number; extrac
 
   return `${genreContextStr}${sampleBlocks}
 
-Given the above writing samples, I want you to draft a prose style sheet, giving instructions on how to write like these samples, and even including small snippets from the samples as examples of your recommendations.
+Given the above writing samples, I want you to draft a prose style sheet, giving instructions on how to write like these samples, and including small verbatim snippets from the samples as examples of your recommendations.
 
-This style sheet is intended for use by an LLM to write fiction in the same style. Be sure to frame your response as instruction on how to write in this style. So you are not just making observations, you're giving instruction.
+This style sheet is intended for use by an LLM to write fiction in the same style. Be sure to frame your response as instruction on how to write in this style. You are giving instruction, not just making observations.
 
 Follow these rules carefully:
 
-1. Base all observations ONLY on the provided samples.
+1. Base all observations ONLY on the provided samples. Do not invent habits or quote text that does not exist in the samples.
 
-2. Describe patterns in general terms and give specific examples (quote the samples verbatim).
+2. CRITICAL VERBATIM QUOTING RULE: Every quoted example MUST be copied character-for-character from the sample text, including its original punctuation, spelling, grammar, and any errors.
+   - Do NOT correct grammar, fix typos, complete sentences, add or remove contractions, or change punctuation in a quote.
+   - Do NOT substitute a pronoun or generic reference for a character's name, or a character's name for a pronoun.
+   - If a quote must be shortened, cut ONLY from the end and mark the cut with an ellipsis ("..."), never mid-clause without marking it.
+   - If you cannot find a real, verbatim quote that demonstrates a claim, do not invent one and do not include that claim.
 
-3. Analyze the writing and create a style guide that covers ONLY the following elements:
+3. EVIDENCE-MATCH RULE: Every quoted example MUST directly demonstrate the specific claim it is attached to before including it. A quote drawn from a different character's dialogue must NOT be used as evidence of the point-of-view character's internal traits unless the section is explicitly about dialogue in general.
+
+4. PUNCTUATION ACCURACY RULE: Before writing Section 12 (Punctuation Habits) and the checklist, list every punctuation mark you are about to claim the author uses. For each one, confirm it appears at least once in the actual sample text. If a mark (e.g. ellipses, semicolons, colons, parentheses) does not appear in the sample, do NOT claim the author uses it, and do NOT recommend it in the checklist.
+
+5. AVOID LIST RULE: Every item in the Avoid list MUST correspond directly to something observed in the sample (a habit to stop, or the direct opposite of a Do item). Do NOT include generic craft or storytelling advice (such as plot, characterization, or story-level pacing) that is not a prose-style observation. Limit the Avoid list strictly to 8–10 concrete, deliberate items rather than generic padding.
+
+6. SELF-CHECK BEFORE FINALIZING: Before finalizing your response, re-read every quoted example against the sample text one more time. If any quote does not match the sample exactly character-for-character, replace it with a real verbatim quote or remove the claim.
+
+Analyze the writing and create a style guide that covers ONLY the following elements:
 
 -Narrative Rhythm
 -Close vs Distant POV
@@ -129,27 +146,27 @@ Use the following exact structure in your response:
 
 ## 1. Narrative Rhythm
 - **Summary:** One–two sentences describing the overall pacing and rhythm.
-- **Key traits:** Bullet list of 3–5 specific rhythmic habits with examples (e.g., mix of short/long sentences, use of pauses, etc.).
+- **Key traits:** Bullet list of 3–5 specific rhythmic habits with verbatim examples (e.g., mix of short/long sentences, use of pauses, etc.).
 
 ## 2. Close vs Distant POV
-- **POV distance:** Explain whether the POV feels very close, moderately close, or distant. (Note, focus only on the distance here, do not mention the actual POV (i.e. don't mention third person, first person, etc.) because this will be determined at a later stage. So just refer to things like the POV distance, mentioning things like show vs tell or deep point of view, as relevant)
-- **Evidence:** Brief descriptions of how internal thoughts, emotions, or observations are handled, with examples pulled from the text itself.
+- **POV distance:** Explain whether the POV feels very close, moderately close, or distant. (Note: focus only on the distance here, do not mention the actual POV such as first person or third person, as this will be determined at a later stage. Refer to distance, show vs tell, deep point of view, as relevant).
+- **Evidence:** Brief descriptions of how internal thoughts, emotions, or observations are handled, with exact verbatim examples pulled from the text itself.
 
 ## 3. Formality
 - **Formality level:** Label as very informal / informal / neutral / formal / very formal.
-- **Indicators:** Bullet list of language choices that signal this level.
+- **Indicators:** Bullet list of language choices that signal this level, with exact verbatim quotes.
 
 ## 4. Overall Tone
 - **Core tone adjectives:** 3–5 adjectives that reliably describe the tone, with a brief explanation of each.
 - **Tone stability:** Explain whether the tone stays consistent or shifts noticeably.
 
 ## 5. Emotional Range
-- **Range description:** Describe how wide the emotional range is (narrow, moderate, wide) in 2-3 setences.
-- **Common emotions:** List the emotions that show up most often in the writing with specific examples from the text.
+- **Range description:** Describe how wide the emotional range is (narrow, moderate, wide) in 2-3 sentences.
+- **Common emotions:** List the emotions that show up most often in the writing with exact verbatim examples from the text.
 
 ## 6. Average Sentence Length and Rhythm
 - **Sentence length:** Characterize the average sentence length (short, medium, long) and variation. 
-- **Rhythmic patterns:** Note recurring patterns such as clusters of short sentences, long flowing sentences, fragments, or frequent use of questions. With specific examples from the samples.
+- **Rhythmic patterns:** Note recurring patterns such as clusters of short sentences, long flowing sentences, fragments, or frequent use of questions, with exact verbatim examples.
 
 ## 7. Paragraphing
 - **Paragraph length:** Describe typical paragraph length (short, medium, long) and variation.
@@ -157,7 +174,7 @@ Use the following exact structure in your response:
 
 ## 8. Average Grade Level
 - **Estimated grade level:** Provide an estimated grade-level (a specific grade, not a range).
-- **Complexity factors:** Mention what drives this level (sentence complexity, vocabulary difficulty, density of ideas). Give specific examples.
+- **Complexity factors:** Mention what drives this level (sentence complexity, vocabulary difficulty, density of ideas) with exact verbatim examples.
 
 ## 9. Dialogue Style
 - **Voice and realism:** Characterize how natural, stylized, or heightened the dialogue feels.
@@ -165,16 +182,16 @@ Use the following exact structure in your response:
 
 ## 10. Sentence Openings
 - **Common opening patterns:** Describe the most frequent ways sentences begin (for example, with pronouns, character names, conjunctions, adverbs, or prepositional phrases).
-- **Variety vs repetition:** Explain whether sentence openings feel varied or repetitive. (Encourage more variation in sentence openings overall)
-- **Distinctive habits:** List any notable quirks (for example, frequent use of “And/But/So” at the start of sentences) and whether they should be treated as features to preserve, to eliminate, or mix in ocassionally.
+- **Variety vs repetition:** Explain whether sentence openings feel varied or repetitive.
+- **Distinctive habits:** List any notable quirks (for example, frequent use of “And/But/So” at the start of sentences) and whether they should be treated as features to preserve, eliminate, or mix in occasionally.
 
 ## 11. Clause Structure and Complexity
 - **Typical clause types:** Describe the balance of simple, compound, and complex sentences.
-- **Stacking vs splitting:** Explain how often the author stacks multiple clauses in one sentence compared to splitting ideas into separate sentences. Give specific examples.
+- **Stacking vs splitting:** Explain how often the author stacks multiple clauses in one sentence compared to splitting ideas into separate sentences, with exact verbatim examples.
 - **Subordination patterns:** Note any recurring use of subordinating structures (for example, “because,” “although,” “even though”) and how they shape the feel of the prose.
 
 ## 12. Punctuation Habits (No Em Dashes)
-- **Core punctuation tools:** Describe how the author uses commas, semicolons, colons, parentheses, ellipses, question marks, and exclamation marks.
+- **Core punctuation tools:** Describe how the author uses commas, semicolons, colons, parentheses, ellipses, question marks, and exclamation marks. ONLY claim marks that actually appear in the sample text.
 - **Constraints and guidance:** 
   - Explicitly state that em dashes must NOT be used when imitating this style.
   - Suggest which other punctuation marks should be used instead of em dashes to achieve similar effects (for example, commas, periods, etc.).
@@ -186,8 +203,8 @@ Use the following exact structure in your response:
 
 
 ## Summarized Style Rules (Checklist)
-- Bullet list of 8–15 concrete “do” rules that someone should follow to imitate this style. (make sure each bulleted item is a complete sentence)
-- Bullet list of 8–15 “avoid” rules that would break the style. (make sure each bulleted item is a complete sentence)
+- Bullet list of 8–15 concrete “do” rules that someone should follow to imitate this style. (Make sure each bulleted item is a complete sentence).
+- Bullet list of 8–10 concrete “avoid” rules that directly correspond to observed prose-style habits in the sample or the opposite of Do rules. Do NOT include generic storytelling, plot, or characterization advice. (Make sure each bulleted item is a complete sentence).
 
 
 Do not focus on specific characters or other details from the samples, just focus on the prose style. The style sheet should be thorough.`;
