@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
 import OpenAI from 'openai';
+import { computeTextFacts, buildFactsBlock, injectMeasuredSections, validateGuide, removeFailingLines } from '../styleGuards.js';
 
 async function generateText(prompt: string): Promise<string> {
   const openAiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || process.env.OPEN_AI_KEY;
@@ -93,14 +94,15 @@ Writing Sample ${sampleNumber}:
 ${sampleText}`;
 }
 
-function createSynthesisPrompt(sampleExtractions: { sampleNumber: number; extractedText: string }[], genre?: string): string {
+function createSynthesisPrompt(sampleExtractions: { sampleNumber: number; extractedText: string }[], genre?: string, factsBlock?: string): string {
   const sampleBlocks = sampleExtractions
     .map(s => `<sample_${s.sampleNumber}>\n${s.extractedText}\n</sample_${s.sampleNumber}>`)
     .join('\n\n');
 
   const genreContextStr = genre ? `Genre Context: ${genre} (for context only, analyze prose style strictly based on the samples provided)\n\n` : '';
+  const factsStr = factsBlock ? `${factsBlock}\n\n` : '';
 
-  return `${genreContextStr}${sampleBlocks}
+  return `${genreContextStr}${factsStr}${sampleBlocks}
 
 Given the above writing samples, I want you to draft a prose style sheet, giving instructions on how to write like these samples, and including small verbatim snippets from the samples as examples of your recommendations.
 
@@ -120,33 +122,15 @@ Follow these rules carefully:
    - Every quoted example MUST directly demonstrate the specific claim it is attached to before including it. A quote drawn from a different character's dialogue must NOT be used as evidence of the point-of-view character's internal traits unless the section is explicitly about dialogue in general.
    - Double-check any grammatical terminology (e.g. adverbs vs conjunctions, clause types) before naming them to ensure 100% technical accuracy.
 
-4. SENTENCE LENGTH GROUNDING RULE (CRITICAL): Before writing Section 6 (Average Sentence Length and Rhythm) and Section 11 (Clause Structure and Complexity), identify the three longest sentences and the three shortest sentences in the combined samples. Base your length and complexity claims strictly on what these actual sentences show, not on a generic assumption about the genre or tone. If the sample contains long, multi-clause stacked sentences, state so explicitly, and do NOT recommend "splitting ideas" or avoiding complexity in the Do/Avoid lists unless the sample itself demonstrates a preference for short, simple sentences.
+4. SENTENCE LENGTH GROUNDING RULE: Refer to the MEASURED FACTS above. Base your length and complexity claims strictly on what these actual sentences show. Write {{SENTENCE_FACTS}} in Section 6.
 
-5. PUNCTUATION ACCURACY & TRUNCATION SEPARATION RULE: 
-   - List every punctuation mark you are about to claim the author uses. For each one, confirm it appears at least once in the actual untruncated sample text.
-   - Any ellipsis ("...") you add yourself to shorten a quotation is a truncation mark, NOT evidence of the author's style. Before writing Section 12 (Punctuation Habits) or recommending ellipses anywhere in the checklist, re-check the full, untruncated sample text. ONLY claim the author uses ellipses if an ellipsis appears in the original sample text itself.
+5. PUNCTUATION ACCURACY RULE: Refer to the MEASURED FACTS above. Do NOT claim or recommend punctuation marked as ABSENT. Write {{PUNCTUATION_FACTS}} in Section 12.
 
-6. AVOID LIST RULE: Every item in the Avoid list MUST correspond directly to something observed in the sample (a habit to stop, or the direct opposite of a Do item). Do NOT include generic craft or storytelling advice (such as plot, characterization, or story-level pacing) that is not a prose-style observation. Limit the Avoid list strictly to 8–10 concrete, deliberate items rather than generic padding.
+6. GRADE LEVEL RULE: Write {{GRADE_FACTS}} in Section 8.
 
-7. SELF-CHECK & CONSISTENCY BEFORE FINALIZING: 
-   - Re-read every quoted example against the sample text one more time. If any quote does not match the sample exactly character-for-character, replace it with a real verbatim quote or remove the claim.
-   - Ensure Section 7 bullet points (paragraph length vs paragraph function) are mutually consistent and do not contradict each other.
+7. AVOID LIST RULE: Every item in the Avoid list MUST correspond directly to something observed in the sample (a habit to stop, or the direct opposite of a Do item). Do NOT include generic craft or storytelling advice (such as plot, characterization, or story-level pacing). Limit the Avoid list strictly to 8–10 concrete items.
 
-Analyze the writing and create a style guide that covers ONLY the following elements:
-
--Narrative Rhythm
--Close vs Distant POV
--Formality
--Overall Tone
--Emotional Range
--Average Sentence Length and Rhythm
--Paragraphing
--Average Grade Level
--Dialogue Style
--Sentence Openings
--Clause structure and complexity
--Punctuation habits 
--Emphasis and cadence tricks
+8. SELF-CHECK & CONSISTENCY: Re-read every quoted example against the sample text. If any quote does not match character-for-character, replace it with a real verbatim quote or remove the claim.
 
 Response format (use Markdown):
 Use the following exact structure in your response:
@@ -174,7 +158,7 @@ Use the following exact structure in your response:
 - **Common emotions:** List the emotions that show up most often in the writing with exact verbatim examples from the text.
 
 ## 6. Average Sentence Length and Rhythm
-- **Sentence length:** Characterize the average sentence length based on the actual sample sentence range (identify longest and shortest sentences in the sample).
+{{SENTENCE_FACTS}}
 - **Rhythmic patterns:** Note recurring patterns such as clusters of short sentences, long flowing multi-clause sentences, fragments, or frequent use of questions, with exact verbatim examples.
 
 ## 7. Paragraphing
@@ -182,7 +166,7 @@ Use the following exact structure in your response:
 - **Paragraph function:** Explain how paragraphs are used (e.g., one idea per paragraph, frequent line breaks for emphasis, long blended paragraphs, etc.), ensuring paragraph length and function bullets are mutually consistent.
 
 ## 8. Average Grade Level
-- **Estimated grade level:** Provide an estimated grade-level (a specific grade, not a range).
+{{GRADE_FACTS}}
 - **Complexity factors:** Mention what drives this level (sentence complexity, vocabulary difficulty, density of ideas) with exact verbatim examples.
 
 ## 9. Dialogue Style
@@ -196,11 +180,11 @@ Use the following exact structure in your response:
 
 ## 11. Clause Structure and Complexity
 - **Typical clause types:** Describe the balance of simple, compound, and complex sentences.
-- **Stacking vs splitting:** Explain how often the author stacks multiple clauses in one sentence compared to splitting ideas into separate sentences, supported by exact verbatim examples. Base recommendations on whether the author actually stacks or splits clauses in the sample.
+- **Stacking vs splitting:** Explain how often the author stacks multiple clauses in one sentence compared to splitting ideas into separate sentences, supported by exact verbatim examples.
 - **Subordination patterns:** Note any recurring use of subordinating structures (for example, “because,” “although,” “even though”) and how they shape the feel of the prose.
 
 ## 12. Punctuation Habits (No Em Dashes)
-- **Core punctuation tools:** Describe how the author uses commas, semicolons, colons, parentheses, ellipses, question marks, and exclamation marks. ONLY claim marks that actually appear in the original sample text (do NOT count your own quote truncation marks).
+{{PUNCTUATION_FACTS}}
 - **Constraints and guidance:** 
   - Explicitly state that em dashes must NOT be used when imitating this style.
   - Suggest which other punctuation marks should be used instead of em dashes to achieve similar effects (for example, commas, periods, etc.).
@@ -247,6 +231,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'At least one writing sample is required.' });
     }
 
+    // Compute deterministic facts
+    const facts = computeTextFacts(rawSamples);
+    const factsBlock = buildFactsBlock(facts);
+
     const sampleExtractions: { sampleNumber: number; extractedText: string }[] = [];
 
     for (let i = 0; i < rawSamples.length; i++) {
@@ -260,8 +248,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const synthesisPrompt = createSynthesisPrompt(sampleExtractions, genre);
-    const resultText = await generateText(synthesisPrompt);
+    // Synthesis phase with Facts Block & Guarded Validation Pipeline
+    let synthesisPrompt = createSynthesisPrompt(sampleExtractions, genre, factsBlock);
+    let resultText = await generateText(synthesisPrompt);
+
+    // Inject measured sections in code (Section 6, 8, 12)
+    resultText = injectMeasuredSections(resultText, facts);
+
+    // Validate guide against source text & facts
+    let validation = validateGuide(resultText, rawSamples, facts);
+
+    if (!validation.ok) {
+      console.warn('First pass failed validation:', validation.problems);
+      // Retry once with detailed feedback
+      const retryPrompt = `${synthesisPrompt}\n\nYOUR PREVIOUS ANSWER FAILED THESE CHECKS. Fix every one. Quote only text that appears word for word in the samples:\n` +
+        validation.problems.map(p => `- ${p.detail}`).join('\n');
+      
+      try {
+        let retryText = await generateText(retryPrompt);
+        retryText = injectMeasuredSections(retryText, facts);
+        const retryVal = validateGuide(retryText, rawSamples, facts);
+        if (retryVal.ok || retryVal.problems.length < validation.problems.length) {
+          resultText = retryText;
+          validation = retryVal;
+        }
+      } catch (err) {
+        console.warn('Retry attempt error:', err);
+      }
+    }
+
+    // Final cleanup pass for any remaining failing lines
+    if (!validation.ok) {
+      resultText = removeFailingLines(resultText, validation.problems);
+    }
 
     return res.status(200).json({
       result: resultText,
