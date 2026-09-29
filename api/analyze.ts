@@ -3,8 +3,8 @@ import { GoogleGenAI } from '@google/genai';
 import OpenAI from 'openai';
 
 async function generateText(prompt: string): Promise<string> {
-  const openAiKey = process.env.OPENAI_API_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY;
+  const openAiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || process.env.OPEN_AI_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_KEY;
 
   const errors: string[] = [];
 
@@ -47,7 +47,7 @@ async function generateText(prompt: string): Promise<string> {
   }
 
   if (!openAiKey && !geminiKey) {
-    throw new Error('Neither OPENAI_API_KEY nor GEMINI_API_KEY is set in Vercel Environment Variables.');
+    throw new Error('Neither OPENAI_API_KEY nor GEMINI_API_KEY is configured in Vercel Environment Variables.');
   }
 
   throw new Error(`Generation failed across configured providers. ${errors.join('; ')}`);
